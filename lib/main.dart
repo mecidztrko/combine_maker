@@ -20,6 +20,7 @@ class _MyAppState extends State<MyApp> {
   final AppState appState = AppState();
   final ImageLibraryState imageLibraryState = ImageLibraryState();
   final StorageService storage = StorageService();
+  final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
   bool _loaded = false;
 
   @override
@@ -54,6 +55,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Kombin Oluşturucu',
+      navigatorKey: _navKey,
       themeMode: ThemeMode.dark,
       theme: ThemeData(
         useMaterial3: true,
@@ -111,7 +113,7 @@ class _MyAppState extends State<MyApp> {
       home: _loaded
           ? LoginPage(
               onSuccess: () {
-                Navigator.of(context).pushReplacement(
+                _navKey.currentState?.pushReplacement(
                   MaterialPageRoute(
                     builder: (_) => HomePage(
                       appState: appState,
