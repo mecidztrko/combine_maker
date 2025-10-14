@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'register_page.dart';
 
-class LoginPage extends StatefulWidget {
+class RegisterPage extends StatefulWidget {
   final VoidCallback onSuccess;
-  const LoginPage({super.key, required this.onSuccess});
+  const RegisterPage({super.key, required this.onSuccess});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  final TextEditingController _confirmPassController = TextEditingController();
   bool _obscure = true;
+  bool _obscureConfirm = true;
   String? _error;
   late AnimationController _logoController;
   late Animation<double> _logoAnimation;
   late AnimationController _formController;
   late Animation<double> _formFadeAnimation;
   late Animation<Offset> _formSlideAnimation;
-
-  static const String _demoUser = 'user';
-  static const String _demoPass = '1234';
 
   @override
   void initState() {
@@ -74,16 +74,30 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void _submit() {
     setState(() => _error = null);
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    final u = _userController.text.trim();
-    final p = _passController.text;
-    if (u == _demoUser && p == _demoPass) {
-      widget.onSuccess();
-    } else {
+    
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final user = _userController.text.trim();
+    final pass = _passController.text;
+    final confirmPass = _confirmPassController.text;
+
+    if (pass != confirmPass) {
       setState(() {
-        _error = 'Kullanıcı adı veya şifre hatalı. Tekrar deneyin.';
-        _passController.clear();
+        _error = 'Şifreler eşleşmiyor.';
+        _confirmPassController.clear();
       });
+      return;
     }
+
+    if (pass.length < 4) {
+      setState(() {
+        _error = 'Şifre en az 4 karakter olmalı.';
+      });
+      return;
+    }
+
+    // Simulate successful registration
+    widget.onSuccess();
   }
 
   @override
@@ -121,7 +135,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.checkroom,
+                                Icons.person_add,
                                 size: 60,
                                 color: Colors.white,
                               ),
@@ -133,7 +147,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       
                       // Title
                       Text(
-                        'Kombin Oluşturucu',
+                        'Hesap Oluştur',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -142,7 +156,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Stilini keşfet, kombinini oluştur',
+                        'Kombin dünyasına katıl',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Colors.white70,
@@ -163,25 +177,80 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 child: Column(
                                   children: [
                                     TextFormField(
-                                      controller: _userController,
+                                      controller: _nameController,
                                       style: const TextStyle(color: Colors.white),
-                                      decoration: InputDecoration(
-                                        labelText: 'Kullanıcı adı',
-                                        labelStyle: const TextStyle(color: Colors.white70),
-                                        prefixIcon: const Icon(Icons.person_outline, color: Colors.white70),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Ad Soyad',
+                                        labelStyle: TextStyle(color: Colors.white70),
+                                        prefixIcon: Icon(Icons.person, color: Colors.white70),
                                         filled: true,
-                                        fillColor: Colors.white.withOpacity(0.1),
+                                        fillColor: Color(0x1AFFFFFF),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
                                           borderSide: BorderSide.none,
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0x33FFFFFF)),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: const BorderSide(color: Colors.white, width: 2),
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Colors.white, width: 2),
+                                        ),
+                                      ),
+                                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Ad soyad zorunlu' : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      style: const TextStyle(color: Colors.white),
+                                      decoration: const InputDecoration(
+                                        labelText: 'E-posta',
+                                        labelStyle: TextStyle(color: Colors.white70),
+                                        prefixIcon: Icon(Icons.email_outlined, color: Colors.white70),
+                                        filled: true,
+                                        fillColor: Color(0x1AFFFFFF),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0x33FFFFFF)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Colors.white, width: 2),
+                                        ),
+                                      ),
+                                      validator: (v) {
+                                        if (v == null || v.trim().isEmpty) return 'E-posta zorunlu';
+                                        if (!v.contains('@')) return 'Geçerli e-posta girin';
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _userController,
+                                      style: const TextStyle(color: Colors.white),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Kullanıcı adı',
+                                        labelStyle: TextStyle(color: Colors.white70),
+                                        prefixIcon: Icon(Icons.person_outline, color: Colors.white70),
+                                        filled: true,
+                                        fillColor: Color(0x1AFFFFFF),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0x33FFFFFF)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Colors.white, width: 2),
                                         ),
                                       ),
                                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Kullanıcı adı zorunlu' : null,
@@ -217,8 +286,40 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                           borderSide: const BorderSide(color: Colors.white, width: 2),
                                         ),
                                       ),
-                                      onFieldSubmitted: (_) => _submit(),
                                       validator: (v) => (v == null || v.isEmpty) ? 'Şifre zorunlu' : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _confirmPassController,
+                                      obscureText: _obscureConfirm,
+                                      style: const TextStyle(color: Colors.white),
+                                      decoration: InputDecoration(
+                                        labelText: 'Şifre Tekrar',
+                                        labelStyle: const TextStyle(color: Colors.white70),
+                                        prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                                            color: Colors.white70,
+                                          ),
+                                          onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.white.withOpacity(0.1),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: const BorderSide(color: Colors.white, width: 2),
+                                        ),
+                                      ),
+                                      validator: (v) => (v == null || v.isEmpty) ? 'Şifre tekrarı zorunlu' : null,
                                     ),
                                   ],
                                 ),
@@ -249,7 +350,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       
                       const SizedBox(height: 24),
                       
-                      // Login Button
+                      // Register Button
                       AnimatedBuilder(
                         animation: _formController,
                         builder: (context, child) {
@@ -268,7 +369,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     elevation: 2,
                                   ),
                                   child: const Text(
-                                    'Giriş Yap',
+                                    'Hesap Oluştur',
                                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                   ),
                                 ),
@@ -280,23 +381,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       
                       const SizedBox(height: 20),
                       
-                      // Register Button
+                      // Back to Login
                       TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RegisterPage(
-                                onSuccess: () {
-                                  Navigator.pop(context);
-                                  widget.onSuccess();
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: () => Navigator.pop(context),
                         child: const Text(
-                          'Hesabın yok mu? Kayıt ol',
+                          'Zaten hesabın var mı? Giriş yap',
                           style: TextStyle(color: Colors.white70),
                         ),
                       ),
@@ -311,4 +400,3 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 }
-
