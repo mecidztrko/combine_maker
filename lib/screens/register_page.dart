@@ -89,9 +89,9 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
       return;
     }
 
-    if (pass.length < 4) {
+    if (pass.length < 8) {
       setState(() {
-        _error = 'Şifre en az 4 karakter olmalı.';
+        _error = 'Şifre en az 8 karakter olmalı.';
       });
       return;
     }

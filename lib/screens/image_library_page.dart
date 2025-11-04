@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io' show File;
 import 'package:combine_maker/models/image_library.dart';
-import 'package:combine_maker/widgets/image_from_path.dart';
+import 'package:combine_maker/models/clothing.dart';
 
 class ImageLibraryPage extends StatefulWidget {
   final ImageLibraryState libraryState;
@@ -15,31 +14,13 @@ class ImageLibraryPage extends StatefulWidget {
 class _ImageLibraryPageState extends State<ImageLibraryPage> {
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _addFromGallery() async {
-    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked == null) return;
-    widget.libraryState.addImage(
-      StoredImage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        path: picked.path,
-        addedAt: DateTime.now(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Görsel Kütüphanesi'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_photo_alternate),
-            onPressed: _addFromGallery,
-          ),
-        ],
       ),
-      body: ValueListenableBuilder<List<StoredImage>>(
+      body: ValueListenableBuilder<List<ClothingItem>>(
         valueListenable: widget.libraryState,
         builder: (context, images, _) {
           if (images.isEmpty) {
@@ -57,10 +38,17 @@ class _ImageLibraryPageState extends State<ImageLibraryPage> {
               final img = images[index];
               return GestureDetector(
                 onLongPress: () => _confirmDelete(img.id),
-                onTap: () => Navigator.pop(context, img),
+                onTap: () => Navigator.pop(context, img.imageUrl),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: ImageFromPath(path: img.path, fit: BoxFit.cover),
+                  child: Image.network(
+                    img.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: const Color(0xFFE0E0E0),
+                      child: const Icon(Icons.image, color: Color(0xFF9E9E9E)),
+                    ),
+                  ),
                 ),
               );
             },
@@ -83,7 +71,7 @@ class _ImageLibraryPageState extends State<ImageLibraryPage> {
       ),
     );
     if (ok == true) {
-      widget.libraryState.removeImage(id);
+      widget.libraryState.removeById(id);
     }
   }
 }

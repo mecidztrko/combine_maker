@@ -9,8 +9,7 @@ import 'package:combine_maker/widgets/image_from_path.dart';
 class CreateOutfitPage extends StatefulWidget {
   final AppState appState;
   final ImageLibraryState? libraryState;
-  final Outfit? editing;
-  const CreateOutfitPage({super.key, required this.appState, this.libraryState, this.editing});
+  const CreateOutfitPage({super.key, required this.appState, this.libraryState});
 
   @override
   State<CreateOutfitPage> createState() => _CreateOutfitPageState();
@@ -21,67 +20,249 @@ class _CreateOutfitPageState extends State<CreateOutfitPage> {
   String? _topImagePath;
   String? _bottomImagePath;
   String? _shoesImagePath;
-  final TextEditingController _titleController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final editing = widget.editing;
-    if (editing != null) {
-      _titleController.text = editing.title;
-      _topImagePath = editing.items.elementAtOrNull(0)?.imagePath;
-      _bottomImagePath = editing.items.elementAtOrNull(1)?.imagePath;
-      _shoesImagePath = editing.items.elementAtOrNull(2)?.imagePath;
-    }
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F0),
       appBar: AppBar(
-        title: const Text('Yeni Kombin Oluştur'),
+        title: const Text('Create Your Style'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: const Icon(Icons.upload),
             onPressed: () {
-              final isEditing = widget.editing != null;
-              final outfit = Outfit(
-                id: isEditing ? widget.editing!.id : DateTime.now().millisecondsSinceEpoch.toString(),
-                title: _titleController.text.isEmpty ? 'Kombin' : _titleController.text.trim(),
-                items: [
-                  ClothingItem(category: 'Üst Giyim', imagePath: _topImagePath),
-                  ClothingItem(category: 'Alt Giyim', imagePath: _bottomImagePath),
-                  ClothingItem(category: 'Ayakkabı', imagePath: _shoesImagePath),
-                ],
-                createdAt: isEditing ? widget.editing!.createdAt : DateTime.now(),
-              );
-              if (isEditing) {
-                widget.appState.updateOutfit(outfit);
-              } else {
-                widget.appState.addOutfit(outfit);
-              }
-              Navigator.pop(context);
+              // Upload functionality
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Preview Outfit Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Preview Outfit',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Model Preview Area
+                    Container(
+                      height: 300,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Icon(Icons.person, size: 100, color: Colors.grey.shade400),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Outfit Components
+                    if (_topImagePath != null || _bottomImagePath != null || _shoesImagePath != null)
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          if (_topImagePath != null) _buildComponentCard('Shirt', _topImagePath!),
+                          if (_bottomImagePath != null) _buildComponentCard('Trousers', _bottomImagePath!),
+                          if (_shoesImagePath != null) _buildComponentCard('Shoes', _shoesImagePath!),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Edit Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _showEditDialog();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 56),
+                  ),
+                  child: const Text('Edit or Change Outfit'),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Outfits to Try Section
+              const Text(
+                'Outfits to Try',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Placeholder for suggested outfits
+              SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 3,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      width: 160,
+                      margin: const EdgeInsets.only(right: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                color: Colors.grey.shade100,
+                              ),
+                              child: Center(
+                                child: Icon(Icons.image, color: Colors.grey.shade400),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              'Outfit ${index + 1}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComponentCard(String label, String imagePath) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: ImageFromPath(
+          path: imagePath,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  void _showEditDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                hintText: 'Kombin başlığı (opsiyonel)',
-                border: OutlineInputBorder(),
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 16),
-            _buildClothingCategory('Üst Giyim'),
-            const SizedBox(height: 16),
-            _buildClothingCategory('Alt Giyim'),
-            const SizedBox(height: 16),
-            _buildClothingCategory('Ayakkabı'),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Edit Outfit',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildClothingCategory('Üst Giyim'),
+                    const SizedBox(height: 16),
+                    _buildClothingCategory('Alt Giyim'),
+                    const SizedBox(height: 16),
+                    _buildClothingCategory('Ayakkabı'),
+                    const Spacer(),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Save Outfit'),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -94,9 +275,9 @@ class _CreateOutfitPageState extends State<CreateOutfitPage> {
       children: [
         Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge,
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -105,19 +286,42 @@ class _CreateOutfitPageState extends State<CreateOutfitPage> {
                 child: Container(
                   height: 150,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Center(child: _previewFor(title)),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            IconButton(
-              tooltip: 'Kütüphaneden seç',
-              icon: const Icon(Icons.photo_library),
-              onPressed: () => _pickFromLibrary(title),
+            const SizedBox(width: 12),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                tooltip: 'Kütüphaneden seç',
+                icon: Icon(Icons.photo_library, color: Colors.grey.shade600),
+                onPressed: () => _pickFromLibrary(title),
+              ),
             ),
           ],
         ),
@@ -153,11 +357,12 @@ class _CreateOutfitPageState extends State<CreateOutfitPage> {
         builder: (context) => ImageLibraryPage(libraryState: widget.libraryState!),
       ),
     );
-    if (selected is StoredImage) {
+    // Page returns a String (image url) or null
+    if (selected is String) {
       setState(() {
-        if (title == 'Üst Giyim') _topImagePath = selected.path;
-        if (title == 'Alt Giyim') _bottomImagePath = selected.path;
-        if (title == 'Ayakkabı') _shoesImagePath = selected.path;
+        if (title == 'Üst Giyim') _topImagePath = selected;
+        if (title == 'Alt Giyim') _bottomImagePath = selected;
+        if (title == 'Ayakkabı') _shoesImagePath = selected;
       });
     }
   }

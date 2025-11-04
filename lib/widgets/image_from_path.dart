@@ -12,11 +12,13 @@ class ImageFromPath extends StatelessWidget {
     if (path == null) {
       return const Center(child: Icon(Icons.checkroom, size: 48));
     }
-    if (kIsWeb) {
-      // image_picker on web returns a blob URL; Image.network ile gösterilir
-      return Image.network(path!, fit: fit, errorBuilder: (c, e, s) => const Center(child: Icon(Icons.image_not_supported)));
+    final String value = path!;
+    final bool isNetwork = value.startsWith('http://') || value.startsWith('https://');
+    if (kIsWeb || isNetwork) {
+      // Web'de blob URL döner veya ağ görseli olabilir
+      return Image.network(value, fit: fit, errorBuilder: (c, e, s) => const Center(child: Icon(Icons.image_not_supported)));
     } else {
-      return Image.file(File(path!), fit: fit, errorBuilder: (c, e, s) => const Center(child: Icon(Icons.image_not_supported)));
+      return Image.file(File(value), fit: fit, errorBuilder: (c, e, s) => const Center(child: Icon(Icons.image_not_supported)));
     }
   }
 }

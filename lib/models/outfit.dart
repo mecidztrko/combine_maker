@@ -1,73 +1,53 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'clothing.dart';
 
-class ClothingItem {
-  final String category; // e.g., Üst Giyim, Alt Giyim, Ayakkabı
-  final String? imagePath; // local file path
+@immutable
+class OutfitSuggestion {
+  final String id;
+  final DateTime forDate;
+  final String purpose; // e.g., "iş görüşmesi"
+  final List<ClothingItem> items;
+  final String rationale; // why selected
 
-  const ClothingItem({required this.category, this.imagePath});
+  const OutfitSuggestion({
+    required this.id,
+    required this.forDate,
+    required this.purpose,
+    required this.items,
+    required this.rationale,
+  });
 
-  ClothingItem copyWith({String? category, String? imagePath}) {
-    return ClothingItem(
-      category: category ?? this.category,
-      imagePath: imagePath ?? this.imagePath,
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'forDate': forDate.toIso8601String(),
+      'purpose': purpose,
+      'items': items.map((e) => e.toJson()).toList(),
+      'rationale': rationale,
+    };
+  }
+
+  factory OutfitSuggestion.fromJson(Map<String, dynamic> json) {
+    return OutfitSuggestion(
+      id: json['id'] as String,
+      forDate: DateTime.parse(json['forDate'] as String),
+      purpose: json['purpose'] as String,
+      items: (json['items'] as List<dynamic>)
+          .map((e) => ClothingItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      rationale: json['rationale'] as String,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'category': category,
-        'imagePath': imagePath,
-      };
-
-  factory ClothingItem.fromJson(Map<String, dynamic> json) => ClothingItem(
-        category: json['category'] as String,
-        imagePath: json['imagePath'] as String?,
-      );
+  static String encodeList(List<OutfitSuggestion> items) => jsonEncode(items.map((e) => e.toJson()).toList());
+  static List<OutfitSuggestion> decodeList(String data) {
+    final raw = jsonDecode(data) as List<dynamic>;
+    return raw.map((e) => OutfitSuggestion.fromJson(e as Map<String, dynamic>)).toList();
+  }
 }
 
-class Outfit {
-  final String id;
-  final String title;
-  final List<ClothingItem> items;
-  final DateTime createdAt;
-
-  const Outfit({
-    required this.id,
-    required this.title,
-    required this.items,
-    required this.createdAt,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'items': items.map((e) => e.toJson()).toList(),
-        'createdAt': createdAt.toIso8601String(),
-      };
-
-  factory Outfit.fromJson(Map<String, dynamic> json) => Outfit(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        items: (json['items'] as List).cast<Map<String, dynamic>>().map(ClothingItem.fromJson).toList(),
-        createdAt: DateTime.parse(json['createdAt'] as String),
-      );
-}
-
-// Simple global app state using ValueNotifier for quick demo
-class AppState extends ValueNotifier<List<Outfit>> {
+// App state containers
+class AppState extends ValueNotifier<List<OutfitSuggestion>> {
   AppState() : super(const []);
-
-  void addOutfit(Outfit outfit) {
-    value = [...value, outfit];
-  }
-
-  void updateOutfit(Outfit updated) {
-    value = [
-      for (final o in value) if (o.id == updated.id) updated else o,
-    ];
-  }
-
-  void deleteOutfit(String id) {
-    value = value.where((o) => o.id != id).toList(growable: false);
-  }
 }
-
