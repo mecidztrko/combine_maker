@@ -14,7 +14,10 @@ class UserService {
   Map<String, dynamic>? get currentUser => _currentUser;
 
   /// POST /auth/register – swagger: body { email, password }
+  /// [name] UI'de kullanılıyor, backend şu an sadece email & password beklediği için
+  /// isteğe eklenmiyor ama imzayı bozmayalım.
   Future<bool> registerUser({
+    required String name,
     required String email,
     required String password,
   }) async {
@@ -47,7 +50,7 @@ class UserService {
       }),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       _storeAuth(response.body);
       return true;
     }

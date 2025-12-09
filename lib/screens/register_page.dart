@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/user_service.dart';
+
 class RegisterPage extends StatefulWidget {
   final VoidCallback onSuccess;
   const RegisterPage({super.key, required this.onSuccess});
@@ -18,6 +20,8 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
   bool _obscure = true;
   bool _obscureConfirm = true;
   String? _error;
+  bool _loading = false;
+  final UserService _userService = UserService();
   late AnimationController _logoController;
   late Animation<double> _logoAnimation;
   late AnimationController _formController;
@@ -68,18 +72,23 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
   void dispose() {
     _logoController.dispose();
     _formController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _userController.dispose();
+    _passController.dispose();
+    _confirmPassController.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     setState(() => _error = null);
     if (!(_formKey.currentState?.validate() ?? false)) return;
     
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-    final user = _userController.text.trim();
-    final pass = _passController.text;
-    final confirmPass = _confirmPassController.text;
+    final String name = _nameController.text.trim();
+    final String email = _emailController.text.trim();
+    // Backend şu an username kullanmıyorsa sadece UI'de kalıyor.
+    final String pass = _passController.text;
+    final String confirmPass = _confirmPassController.text;
 
     if (pass != confirmPass) {
       setState(() {
@@ -96,8 +105,38 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
       return;
     }
 
-    // Simulate successful registration
-    widget.onSuccess();
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final bool success = await _userService.registerUser(
+        name: name,
+        email: email,
+        password: pass,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        widget.onSuccess();
+      } else {
+        setState(() {
+          _error = 'Kayıt başarısız. Lütfen tekrar deneyin.';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -361,17 +400,25 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                               child: SizedBox(
                                 height: 50,
                                 child: ElevatedButton(
-                                  onPressed: _submit,
+                                  onPressed: _loading ? null : _submit,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     elevation: 2,
                                   ),
-                                  child: const Text(
-                                    'Hesap Oluştur',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                  ),
+                                  child: _loading
+                                      ? const SizedBox(
+                                          height: 22,
+                                          width: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Hesap Oluştur',
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                        ),
                                 ),
                               ),
                             ),
