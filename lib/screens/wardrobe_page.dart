@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/image_library.dart';
 import '../models/clothing.dart';
 import '../services/ai_service.dart';
+import '../services/clothing_items_service.dart';
 import '../widgets/clothing_card.dart';
 
 class WardrobePage extends StatefulWidget {
@@ -17,6 +18,37 @@ class WardrobePage extends StatefulWidget {
 class _WardrobePageState extends State<WardrobePage> {
   final _rng = Random();
   ClothingCategory? _selectedCategory;
+  final ClothingItemsService _service = ClothingItemsService();
+  bool _loadingFromBackend = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncFromBackend();
+  }
+
+  Future<void> _syncFromBackend() async {
+    setState(() {
+      _loadingFromBackend = true;
+      _error = null;
+    });
+    try {
+      final items = await _service.fetchAll();
+      widget.imageLibraryState.value = items;
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingFromBackend = false;
+        });
+      }
+    }
+  }
 
   void _addMockItem() async {
     // MVP: use a dialog to get a name/hint, then auto-categorize
@@ -37,22 +69,19 @@ class _WardrobePageState extends State<WardrobePage> {
     );
     if (name == null || name.isEmpty) return;
 
-    final category = widget.ai.autoCategorize(name);
-    final item = ClothingItem(
-      id: '${DateTime.now().millisecondsSinceEpoch}-${_rng.nextInt(1 << 32)}',
-      name: name,
-      imageUrl: 'https://picsum.photos/seed/${DateTime.now().millisecondsSinceEpoch}/200/200',
-      category: category,
-      warmth: switch (category) {
-        ClothingCategory.outerwear => 8,
-        ClothingCategory.top => 4,
-        ClothingCategory.bottom => 4,
-        ClothingCategory.shoes => 3,
-        ClothingCategory.accessory => 1,
-      },
-      formality: name.toLowerCase().contains('takım') || name.toLowerCase().contains('ceket') ? 7 : 4,
-    );
-    widget.imageLibraryState.addItem(item);
+    final imageUrl =
+        'https://picsum.photos/seed/${DateTime.now().millisecondsSinceEpoch}/600/800';
+
+    try {
+      final created =
+          await _service.create(name: name, imageUrl: imageUrl);
+      widget.imageLibraryState.addItem(created);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kıyafet eklenemedi: $e')),
+      );
+    }
   }
 
   String _getCategoryLabel(ClothingCategory category) {
@@ -97,7 +126,9 @@ class _WardrobePageState extends State<WardrobePage> {
               ),
             ],
           ),
-          body: items.isEmpty
+          body: _loadingFromBackend
+              ? const Center(child: CircularProgressIndicator())
+              : items.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -133,41 +164,98 @@ class _WardrobePageState extends State<WardrobePage> {
                     ],
                   ),
                 )
-              : CustomScrollView(
-                  slivers: [
-                    // Category Tabs
-                    SliverToBoxAdapter(
+              : _error != null
+                  ? Center(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildCategoryTab('All', null),
-                              const SizedBox(width: 12),
-                              ...categories.map((cat) => Padding(
-                                    padding: const EdgeInsets.only(right: 12),
-                                    child: _buildCategoryTab(_getCategoryLabel(cat), cat),
-                                  )),
-                            ],
-                          ),
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.error_outline,
+                                size: 40, color: Colors.red),
+                            const SizedBox(height: 16),
+                            Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _syncFromBackend,
+                              child: const Text('Tekrar dene'),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    // Content Sections
-                    if (_selectedCategory == null || _selectedCategory == ClothingCategory.top)
-                      _buildCategorySection('Shirts', categoryItems[ClothingCategory.top] ?? []),
-                    if (_selectedCategory == null || _selectedCategory == ClothingCategory.outerwear)
-                      _buildCategorySection('Jackets', categoryItems[ClothingCategory.outerwear] ?? []),
-                    if (_selectedCategory == null || _selectedCategory == ClothingCategory.bottom)
-                      _buildCategorySection('Trousers', categoryItems[ClothingCategory.bottom] ?? []),
-                    if (_selectedCategory == null || _selectedCategory == ClothingCategory.shoes)
-                      _buildCategorySection('Shoes', categoryItems[ClothingCategory.shoes] ?? []),
-                    if (_selectedCategory == null || _selectedCategory == ClothingCategory.accessory)
-                      _buildCategorySection('Accessories', categoryItems[ClothingCategory.accessory] ?? []),
-                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                  ],
-                ),
+                    )
+                  : CustomScrollView(
+                      slivers: [
+                        // Category Tabs
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _buildCategoryTab('All', null),
+                                  const SizedBox(width: 12),
+                                  ...categories.map((cat) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 12),
+                                        child: _buildCategoryTab(
+                                            _getCategoryLabel(cat), cat),
+                                      )),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Content Sections
+                        if (_selectedCategory == null ||
+                            _selectedCategory ==
+                                ClothingCategory.top)
+                          _buildCategorySection(
+                              'Shirts',
+                              categoryItems[ClothingCategory.top] ??
+                                  []),
+                        if (_selectedCategory == null ||
+                            _selectedCategory ==
+                                ClothingCategory.outerwear)
+                          _buildCategorySection(
+                              'Jackets',
+                              categoryItems[
+                                      ClothingCategory.outerwear] ??
+                                  []),
+                        if (_selectedCategory == null ||
+                            _selectedCategory ==
+                                ClothingCategory.bottom)
+                          _buildCategorySection(
+                              'Trousers',
+                              categoryItems[
+                                      ClothingCategory.bottom] ??
+                                  []),
+                        if (_selectedCategory == null ||
+                            _selectedCategory ==
+                                ClothingCategory.shoes)
+                          _buildCategorySection(
+                              'Shoes',
+                              categoryItems[
+                                      ClothingCategory.shoes] ??
+                                  []),
+                        if (_selectedCategory == null ||
+                            _selectedCategory ==
+                                ClothingCategory.accessory)
+                          _buildCategorySection(
+                              'Accessories',
+                              categoryItems[
+                                      ClothingCategory.accessory] ??
+                                  []),
+                        const SliverToBoxAdapter(
+                            child: SizedBox(height: 100)),
+                      ],
+                  ),
         );
       },
     );
@@ -222,9 +310,10 @@ class _WardrobePageState extends State<WardrobePage> {
               ),
               itemCount: items.length,
               itemBuilder: (context, index) {
+                final item = items[index];
                 return ClothingCard(
-                  item: items[index],
-                  onRemove: () => widget.imageLibraryState.removeById(items[index].id),
+                  item: item,
+                  onRemove: () => _deleteItem(item),
                 );
               },
             ),
@@ -232,6 +321,21 @@ class _WardrobePageState extends State<WardrobePage> {
         ],
       ),
     );
+  }
+
+  Future<void> _deleteItem(ClothingItem item) async {
+    final previous = widget.imageLibraryState.value;
+    widget.imageLibraryState.removeById(item.id);
+    try {
+      await _service.delete(item.id);
+    } catch (e) {
+      if (!mounted) return;
+      // Geri al
+      widget.imageLibraryState.value = previous;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kıyafet silinemedi: $e')),
+      );
+    }
   }
 }
 

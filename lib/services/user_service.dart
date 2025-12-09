@@ -4,7 +4,13 @@ import 'package:http/http.dart' as http;
 
 import '../config.dart';
 
+/// Uygulama genelinde tek bir kullanıcı oturumu tutulması için
+/// [UserService] basit bir singleton olarak tasarlandı.
 class UserService {
+  UserService._internal();
+  static final UserService _instance = UserService._internal();
+  factory UserService() => _instance;
+
   static const String _baseUrl = AppConfig.apiBaseUrl;
 
   String? _accessToken;
