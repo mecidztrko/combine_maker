@@ -26,20 +26,33 @@ class _MyAppState extends State<MyApp> {
   final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
   bool _loaded = false;
 
+  void _navigateToHome() {
+    _navKey.currentState?.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => HomePage(
+          appState: appState,
+          imageLibraryState: imageLibraryState,
+          onLogout: _navigateToLogin,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToLogin() {
+    _navKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => LoginPage(onSuccess: _navigateToHome),
+      ),
+      (route) => false,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     appState.addListener(_save);
     imageLibraryState.addListener(_save);
     _load();
-
-    // Optional sample call to verify backend connectivity
-    final userService = UserService();
-    userService.registerUser(
-      name: "Test User",
-      email: "test@example.com",
-      password: "12345678",
-    );
   }
 
 
@@ -161,18 +174,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       home: _loaded
-          ? LoginPage(
-              onSuccess: () {
-                _navKey.currentState?.pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => HomePage(
-                      appState: appState,
-                      imageLibraryState: imageLibraryState,
-                    ),
-                  ),
-                );
-              },
-            )
+          ? LoginPage(onSuccess: _navigateToHome)
           : const Scaffold(body: Center(child: CircularProgressIndicator())),
     );
   }

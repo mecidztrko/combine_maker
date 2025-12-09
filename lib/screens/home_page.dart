@@ -9,7 +9,13 @@ import '../services/ai_service.dart';
 class HomePage extends StatefulWidget {
   final AppState appState;
   final ImageLibraryState imageLibraryState;
-  const HomePage({super.key, required this.appState, required this.imageLibraryState});
+  final VoidCallback onLogout;
+  const HomePage({
+    super.key,
+    required this.appState,
+    required this.imageLibraryState,
+    required this.onLogout,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -277,8 +283,45 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Profile'),
       ),
-      body: const Center(
-        child: Text('Profile Screen', style: TextStyle(fontSize: 18)),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('Profil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  SizedBox(height: 8),
+                  Text('Giriş yaptınız. Çıkış yapmak için aşağıdaki butonu kullanın.',
+                      style: TextStyle(color: Colors.black54)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: widget.onLogout,
+              icon: const Icon(Icons.logout),
+              label: const Text('Çıkış Yap'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

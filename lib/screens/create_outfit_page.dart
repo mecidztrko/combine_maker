@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:combine_maker/models/outfit.dart';
 import 'package:combine_maker/models/image_library.dart';
 import 'package:combine_maker/screens/image_library_page.dart';

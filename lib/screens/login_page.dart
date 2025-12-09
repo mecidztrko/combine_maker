@@ -201,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'MVP için herhangi bir email ve en az 6 karakterlik şifre ile giriş yapabilirsiniz.',
+                              'Gerçek API\'ye bağlanır. Kayıtlı kullanıcı email/şifresini kullanın.',
                               style: TextStyle(
                                 color: Colors.green.shade800,
                                 fontSize: 12,
