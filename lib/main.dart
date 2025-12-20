@@ -25,6 +25,7 @@ class _MyAppState extends State<MyApp> {
   final StorageService storage = StorageService();
   final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
   bool _loaded = false;
+  bool _isAuthenticated = false;
 
   void _navigateToHome() {
     _navKey.currentState?.pushReplacement(
@@ -38,7 +39,25 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void _navigateToLogin() {
+  Future<void> _checkAuth() async {
+    final userService = UserService();
+    await userService.loadToken();
+
+    if (userService.accessToken != null) {
+      setState(() {
+        _isAuthenticated = true;
+      });
+      _navigateToHome();
+    } else {
+      setState(() {
+        _isAuthenticated = true;
+      });
+      // LoginPage zaten gösterilecek
+    }
+  }
+
+  void _navigateToLogin() async {
+    await UserService().logout();
     _navKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => LoginPage(onSuccess: _navigateToHome),
@@ -60,6 +79,7 @@ class _MyAppState extends State<MyApp> {
     final (outfits, images) = await storage.loadState();
     appState.value = outfits;
     imageLibraryState.value = images;
+    await _checkAuth(); // Token kontrolü burada
     setState(() {
       _loaded = true;
     });
@@ -174,7 +194,13 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       home: _loaded
-          ? LoginPage(onSuccess: _navigateToHome)
+          ? (_isAuthenticated && UserService().accessToken != null
+              ? HomePage(
+                  appState: appState,
+                  imageLibraryState: imageLibraryState,
+                  onLogout: _navigateToLogin,
+                )
+              : LoginPage(onSuccess: _navigateToHome))
           : const Scaffold(body: Center(child: CircularProgressIndicator())),
     );
   }

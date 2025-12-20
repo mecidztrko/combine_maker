@@ -12,7 +12,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController(text: 'test@example.com');
-  final _passwordController = TextEditingController(text: '12345678');
+  final _passwordController = TextEditingController(text: 'password123');
   bool _loading = false;
   String? _errorMessage;
   final _userService = UserService();
@@ -51,7 +51,12 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Bir hata oluştu: $e';
+        // Hata mesajını daha okunabilir hale getir
+        String errorText = e.toString();
+        if (errorText.startsWith('Exception: ')) {
+          errorText = errorText.substring(11);
+        }
+        _errorMessage = errorText;
         _loading = false;
       });
     }
