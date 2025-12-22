@@ -100,6 +100,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Kombin Oluşturucu',
+      debugShowCheckedModeBanner: false,
       navigatorKey: _navKey,
       themeMode: ThemeMode.light,
       theme: ThemeData(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:math';
 import '../models/image_library.dart';
 import '../models/clothing.dart';
@@ -50,37 +51,63 @@ class _WardrobePageState extends State<WardrobePage> {
     }
   }
 
-  void _addMockItem() async {
-    // MVP: use a dialog to get a name/hint, then auto-categorize
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Parça ekle'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Örn: "siyah sneaker"'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('İptal')),
-          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text.trim()), child: const Text('Ekle')),
-        ],
-      ),
-    );
-    if (name == null || name.isEmpty) return;
-
-    final imageUrl =
-        'https://picsum.photos/seed/${DateTime.now().millisecondsSinceEpoch}/600/800';
-
+  Future<void> _pickAndUploadItem() async {
     try {
-      final created =
-          await _service.create(name: name, imageUrl: imageUrl);
+      final ImagePicker picker = ImagePicker();
+      // Show dialog to choose camera or gallery
+      final source = await showDialog<ImageSource>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Resim Kaynağı'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Kamera'),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeri'),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (source == null) return;
+
+      final XFile? image = await picker.pickImage(source: source);
+      if (image == null) return;
+
+      if (!mounted) return;
+      
+      // Opt: ask for name or let backend/AI decide?
+      // Backend create endpoint takes name/imageUrl, upload endpoint probably just file.
+      // If upload endpoint returns the created item, we are good.
+      // Let's assume upload endpoint handles everything including AI categorization.
+      
+      setState(() => _loadingFromBackend = true);
+      
+      final created = await _service.upload(image.path);
       widget.imageLibraryState.addItem(created);
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kıyafet başarıyla eklendi!')),
+      );
+      
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kıyafet eklenemedi: $e')),
+        SnackBar(content: Text('Hata: $e')),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _loadingFromBackend = false);
+      }
     }
   }
 
@@ -122,7 +149,7 @@ class _WardrobePageState extends State<WardrobePage> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: _addMockItem,
+                onPressed: _pickAndUploadItem,
               ),
             ],
           ),

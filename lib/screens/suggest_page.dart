@@ -3,6 +3,8 @@ import '../models/outfit.dart';
 import '../models/image_library.dart';
 import '../services/weather_service.dart';
 import '../services/ai_service.dart';
+import '../services/outfit_service.dart';
+
 
 class SuggestPage extends StatefulWidget {
   final AppState appState;
@@ -17,6 +19,7 @@ class SuggestPage extends StatefulWidget {
 class _SuggestPageState extends State<SuggestPage> {
   DateTime _date = DateTime.now();
   final TextEditingController _purpose = TextEditingController(text: 'iş görüşmesi');
+  final _outfitService = OutfitService();
   final _weatherService = WeatherService();
   List<OutfitSuggestion> _results = const [];
   bool _loading = false;
@@ -42,18 +45,28 @@ class _SuggestPageState extends State<SuggestPage> {
       _loading = true;
       _results = const [];
     });
-    final weather = await _weatherService.getWeatherFor(_date);
-    final outfits = widget.ai.suggestOutfits(
-      forDate: _date,
-      purpose: _purpose.text,
-      wardrobe: widget.imageLibraryState.value,
-      tempC: weather.temperatureC,
-      condition: weather.condition,
-    );
-    setState(() {
-      _results = outfits;
-      _loading = false;
-    });
+    
+    // Check weather just to show user or verify?
+    // The backend might already check weather if we pass date.
+    // But keeping it here if we want to display it.
+    try {
+      final weather = await _weatherService.getWeatherFor(_date);
+      
+      final recommendation = await _outfitService.getRecommendation(
+        date: _date,
+        eventType: _purpose.text.trim().isEmpty ? 'genel' : _purpose.text.trim(),
+        location: 'İstanbul', // Defaults for now
+      );
+
+      setState(() {
+        _results = [recommendation];
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
+      setState(() => _loading = false);
+    }
   }
 
   void _save(OutfitSuggestion outfit) {

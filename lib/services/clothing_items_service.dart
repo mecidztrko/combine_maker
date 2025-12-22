@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http_parser/http_parser.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -81,6 +82,53 @@ class ClothingItemsService {
     }
 
     throw Exception(_extractError(resp));
+  }
+
+  /// POST /clothing-items/upload - Upload image file
+  Future<ClothingItem> upload(String filePath) async {
+    final uri = Uri.parse('$_baseUrl/clothing-items/upload');
+    final request = http.MultipartRequest('POST', uri);
+    
+    // Add Authorization header
+    final token = _userService.accessToken;
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    // Determine mime type
+    final ext = filePath.split('.').last.toLowerCase();
+    MediaType? mediaType;
+    if (ext == 'jpg' || ext == 'jpeg') {
+      mediaType = MediaType('image', 'jpeg');
+    } else if (ext == 'png') {
+      mediaType = MediaType('image', 'png');
+    } else if (ext == 'webp') {
+      mediaType = MediaType('image', 'webp');
+    } else {
+      mediaType = MediaType('image', 'jpeg');
+    }
+
+    // Add file with explicit content type
+    request.files.add(await http.MultipartFile.fromPath(
+      'image', 
+      filePath,
+      contentType: mediaType,
+    ));
+
+    // Add name (required by backend)
+    // Extract a default name from the file path, e.g. "image_picker_123.jpg" -> "New Item" or just filename
+    final fileName = filePath.split('/').last;
+    request.fields['name'] = 'Kıyafet ${DateTime.now().millisecond}'; // Unique-ish default name
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body) as Map<String, dynamic>;
+      return ClothingItem.fromBackendJson(data);
+    }
+    
+    throw Exception(_extractError(response));
   }
 
   /// DELETE /clothing-items/{id}

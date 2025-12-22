@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onSuccess;
@@ -216,6 +217,37 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Hesabın yok mu?',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RegisterPage(
+                                  // Kayıt başarılı olunca ne yapalım?
+                                  // Genelde direkt giriş yapılmış sayılır veya login'e döner.
+                                  // Şimdilik login'e (buraya) geri dönelim, kullanıcı yeni şifresiyle girsin.
+                                  onSuccess: () {
+                                    Navigator.pop(context); // Register'dan çık
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Kayıt başarılı! Lütfen giriş yapın.')),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Hesap Oluştur'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

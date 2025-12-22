@@ -12,7 +12,7 @@ class UserService {
   static final UserService _instance = UserService._internal();
   factory UserService() => _instance;
 
-  static const String _baseUrl = AppConfig.apiBaseUrl;
+  static String get _baseUrl => AppConfig.apiBaseUrl;
   static const String _tokenKey = 'access_token';
   static const String _userKey = 'user';
 
@@ -23,8 +23,6 @@ class UserService {
   Map<String, dynamic>? get currentUser => _currentUser;
 
   /// POST /auth/register – swagger: body { email, password }
-  /// [name] UI'de kullanılıyor, backend şu an sadece email & password beklediği için
-  /// isteğe eklenmiyor ama imzayı bozmayalım.
   Future<bool> registerUser({
     required String name,
     required String email,
@@ -46,6 +44,27 @@ class UserService {
     }
 
     throw Exception(_extractError(response));
+  }
+  
+  Future<Map<String, dynamic>?> getProfile() async {
+    final uri = Uri.parse('$_baseUrl/auth/profile');
+    final token = _accessToken;
+    if (token == null) return null;
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      _currentUser = data; // Update local user data
+      return data;
+    }
+    return null;
   }
 
   Future<bool> login({required String email, required String password}) async {

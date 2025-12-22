@@ -238,27 +238,29 @@ class _CreateOutfitPageState extends State<CreateOutfitPage> {
               ),
             ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    _buildClothingCategory('Üst Giyim'),
-                    const SizedBox(height: 16),
-                    _buildClothingCategory('Alt Giyim'),
-                    const SizedBox(height: 16),
-                    _buildClothingCategory('Ayakkabı'),
-                    const Spacer(),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Save Outfit'),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      _buildClothingCategory('Üst Giyim'),
+                      const SizedBox(height: 16),
+                      _buildClothingCategory('Alt Giyim'),
+                      const SizedBox(height: 16),
+                      _buildClothingCategory('Ayakkabı'),
+                      const SizedBox(height: 20), // Spacer replacement
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Save Outfit'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
