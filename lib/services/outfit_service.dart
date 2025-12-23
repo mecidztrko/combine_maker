@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config.dart';
@@ -24,18 +23,22 @@ class OutfitService {
   }
 
   /// POST /outfits/recommend
-  /// Body: { "date": "iso-date", "eventType": "wedding" ... }
-  Future<OutfitSuggestion> getRecommendation({
+  /// Backend RecommendOutfitDto formatına uygun:
+  /// { "date": "YYYY-MM-DD", "occasion": "iş görüşmesi", "city": "Istanbul" }
+  Future<OutfitRecommendationResponse> getRecommendations({
     required DateTime date,
-    required String eventType, // e.g. "business", "casual", "wedding"
-    String? location,
+    required String occasion,
+    String city = 'Istanbul',
   }) async {
     final uri = Uri.parse('$_baseUrl/outfits/recommend');
     
+    // Backend YYYY-MM-DD formatı bekliyor
+    final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    
     final body = {
-      'date': date.toIso8601String(),
-      'eventType': eventType,
-      if (location != null) 'location': location,
+      'date': dateStr,
+      'occasion': occasion,
+      'city': city,
     };
 
     final resp = await _client.post(
@@ -46,16 +49,55 @@ class OutfitService {
 
     if (resp.statusCode == 200 || resp.statusCode == 201) {
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      // Expecting backend to return a structure compatible with OutfitSuggestion
-      // or we might need a fromBackendJson adapter in OutfitSuggestion.
-      // For now, assume it matches or is close enough to use existing fromJson or we adapt here.
-      
-      // If backend returns just the items list directly?
-      // Swagger says "Tarih ve etkinlik bazlı kombin önerisi" -> likely one recommendation object.
-      
-      return OutfitSuggestion.fromJson(data);
+      return OutfitRecommendationResponse.fromJson(data);
     }
 
-    throw Exception('Failed to get recommendation: ${resp.statusCode} ${resp.body}');
+    throw Exception('Kombin önerisi alınamadı: ${resp.statusCode} ${resp.body}');
+  }
+
+  /// Geriye uyumluluk için eski metod imzası
+  /// @deprecated Use getRecommendations instead
+  Future<OutfitSuggestion> getRecommendation({
+    required DateTime date,
+    required String eventType, // Eski isim, occasion'a çevrilecek
+    String? location,
+  }) async {
+    final response = await getRecommendations(
+      date: date,
+      occasion: eventType,
+      city: location ?? 'Istanbul',
+    );
+
+    // İlk öneriyi döndür
+    if (response.outfits.isEmpty) {
+      throw Exception('Kombin önerisi bulunamadı');
+    }
+
+    return OutfitSuggestion.fromBackendOutfitDto(
+      response.outfits.first,
+      forDate: date,
+      purpose: eventType,
+    );
+  }
+
+  /// Birden fazla öneri al ve OutfitSuggestion listesi olarak döndür
+  Future<List<OutfitSuggestion>> getSuggestions({
+    required DateTime date,
+    required String occasion,
+    String city = 'Istanbul',
+  }) async {
+    final response = await getRecommendations(
+      date: date,
+      occasion: occasion,
+      city: city,
+    );
+
+    return response.outfits
+        .map((dto) => OutfitSuggestion.fromBackendOutfitDto(
+              dto,
+              forDate: date,
+              purpose: occasion,
+            ))
+        .toList();
   }
 }

@@ -6,6 +6,7 @@ import 'suggest_page.dart';
 import 'create_outfit_page.dart';
 import 'profile_page.dart';
 import '../services/ai_service.dart';
+import '../services/user_preferences.dart';
 
 class HomePage extends StatefulWidget {
   final AppState appState;
@@ -25,6 +26,22 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   late final AiAdapter _ai = MockAiAdapter();
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final profile = await UserPreferences.loadProfile();
+    if (mounted) {
+      setState(() {
+        _userName = profile['firstName'] ?? '';
+      });
+    }
+  }
 
   Widget _buildHomeScreen() {
     return Scaffold(
@@ -39,9 +56,77 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome Abdullah!',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text(
+                                    '👋',
+                                    style: TextStyle(fontSize: 28),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: ShaderMask(
+                                      shaderCallback: (bounds) => const LinearGradient(
+                                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ).createShader(bounds),
+                                      child: Text(
+                                        _userName.isNotEmpty 
+                                            ? 'Merhaba, $_userName!'
+                                            : 'Merhaba!',
+                                        style: const TextStyle(
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Bugün nasıl bir kombin denemek istersin?',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF667eea).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.checkroom_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     // Search Bar
