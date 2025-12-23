@@ -4,6 +4,7 @@ import '../models/image_library.dart';
 import 'wardrobe_page.dart';
 import 'suggest_page.dart';
 import 'create_outfit_page.dart';
+import 'profile_page.dart';
 import '../services/ai_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -258,7 +259,7 @@ class _HomePageState extends State<HomePage> {
       WardrobePage(imageLibraryState: widget.imageLibraryState, ai: _ai),
       CreateOutfitPage(appState: widget.appState, libraryState: widget.imageLibraryState),
       SuggestPage(appState: widget.appState, imageLibraryState: widget.imageLibraryState, ai: _ai),
-      _buildProfileScreen(),
+      ProfilePage(onLogout: widget.onLogout),
     ];
 
     return Scaffold(

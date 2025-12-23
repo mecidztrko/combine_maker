@@ -21,6 +21,7 @@ class _SuggestPageState extends State<SuggestPage> {
   final TextEditingController _purpose = TextEditingController(text: 'iş görüşmesi');
   final _outfitService = OutfitService();
   final _weatherService = WeatherService();
+  WeatherInfo? _weather;
   List<OutfitSuggestion> _results = const [];
   bool _loading = false;
 
@@ -59,6 +60,7 @@ class _SuggestPageState extends State<SuggestPage> {
       );
 
       setState(() {
+        _weather = weather;
         _results = [recommendation];
         _loading = false;
       });
@@ -188,7 +190,48 @@ class _SuggestPageState extends State<SuggestPage> {
                         ],
                       ),
                     )
-                    : ListView.separated(
+                    : Column(
+                        children: [
+                          if (_weather != null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.blue.shade100),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _weather!.condition.toLowerCase().contains('yağ') ? Icons.grain : Icons.wb_sunny,
+                                    color: _weather!.condition.toLowerCase().contains('yağ') ? Colors.blue : Colors.orange,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Hava Durumu (${_date.day}.${_date.month})',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${_weather!.temperatureC}°C, ${_weather!.condition}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Expanded(
+                            child: ListView.separated(
                         key: ValueKey(_results.length),
                         itemCount: _results.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -297,6 +340,9 @@ class _SuggestPageState extends State<SuggestPage> {
                           );
                         },
                       ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

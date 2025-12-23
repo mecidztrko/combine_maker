@@ -17,6 +17,11 @@ class ClothingItem {
   final ClothingCategory category;
   final int warmth; // 1-10 subjective warmth
   final int formality; // 1-10 subjective formality
+  // AI-detected fields
+  final String? color;
+  final String? style;
+  final String? gender;
+  final double? confidence;
 
   const ClothingItem({
     required this.id,
@@ -25,6 +30,10 @@ class ClothingItem {
     required this.category,
     required this.warmth,
     required this.formality,
+    this.color,
+    this.style,
+    this.gender,
+    this.confidence,
   });
 
   ClothingItem copyWith({
@@ -34,6 +43,10 @@ class ClothingItem {
     ClothingCategory? category,
     int? warmth,
     int? formality,
+    String? color,
+    String? style,
+    String? gender,
+    double? confidence,
   }) {
     return ClothingItem(
       id: id ?? this.id,
@@ -42,6 +55,10 @@ class ClothingItem {
       category: category ?? this.category,
       warmth: warmth ?? this.warmth,
       formality: formality ?? this.formality,
+      color: color ?? this.color,
+      style: style ?? this.style,
+      gender: gender ?? this.gender,
+      confidence: confidence ?? this.confidence,
     );
   }
 
@@ -82,12 +99,22 @@ class ClothingItem {
   /// }
   /// ```
   factory ClothingItem.fromBackendJson(Map<String, dynamic> json) {
+    print('ClothingItem.fromBackendJson raw data: $json');
+    
     final rawCategoryName = ((json['category'] as Map?)?['name'] ?? '') as String;
     final categoryName = rawCategoryName.toLowerCase();
 
     final category = _mapBackendCategory(categoryName);
     final warmth = _defaultWarmthFor(category);
     final formality = _defaultFormalityFor(categoryName);
+
+    // Parse AI-detected fields
+    final colorValue = json['color'] as String?;
+    final styleValue = json['style'] as String?;
+    final genderValue = json['gender'] as String?;
+    final confidenceValue = json['confidence'] != null 
+        ? (json['confidence'] as num).toDouble() 
+        : null;
 
     return ClothingItem(
       id: json['id'] as String,
@@ -96,6 +123,10 @@ class ClothingItem {
       category: category,
       warmth: warmth,
       formality: formality,
+      color: colorValue,
+      style: styleValue,
+      gender: genderValue,
+      confidence: confidenceValue,
     );
   }
 

@@ -31,8 +31,25 @@ class ClothingItemsService {
     final resp = await _client.get(uri, headers: _headers());
 
     if (resp.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(resp.body) as List<dynamic>;
-      return data
+      final dynamic decoded = jsonDecode(resp.body);
+      List<dynamic> listData;
+      
+      if (decoded is List) {
+        listData = decoded;
+      } else if (decoded is Map<String, dynamic>) {
+        if (decoded.containsKey('data') && decoded['data'] is List) {
+          listData = decoded['data'];
+        } else if (decoded.containsKey('items') && decoded['items'] is List) {
+          listData = decoded['items'];
+        } else {
+           print('Beklenmeyen yanıt formatı (Map): $decoded');
+           throw Exception('Backend liste yerine nesne döndürdü: $decoded');
+        }
+      } else {
+         throw Exception('Beklenmeyen yanıt formatı: ${decoded.runtimeType}');
+      }
+
+      return listData
           .map((e) => ClothingItem.fromBackendJson(e as Map<String, dynamic>))
           .toList();
     }
@@ -49,8 +66,25 @@ class ClothingItemsService {
     final resp = await _client.get(uri, headers: _headers());
 
     if (resp.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(resp.body) as List<dynamic>;
-      return data
+      final dynamic decoded = jsonDecode(resp.body);
+      List<dynamic> listData;
+      
+      if (decoded is List) {
+        listData = decoded;
+      } else if (decoded is Map<String, dynamic>) {
+        if (decoded.containsKey('data') && decoded['data'] is List) {
+          listData = decoded['data'];
+        } else if (decoded.containsKey('items') && decoded['items'] is List) {
+          listData = decoded['items'];
+        } else {
+           print('Beklenmeyen yanıt formatı (Map): $decoded');
+           throw Exception('Backend liste yerine nesne döndürdü: $decoded');
+        }
+      } else {
+         throw Exception('Beklenmeyen yanıt formatı: ${decoded.runtimeType}');
+      }
+
+      return listData
           .map((e) => ClothingItem.fromBackendJson(e as Map<String, dynamic>))
           .toList();
     }
@@ -108,7 +142,7 @@ class ClothingItemsService {
       mediaType = MediaType('image', 'jpeg');
     }
 
-    // Add file with explicit content type
+    print('Uploading file to $uri with field name: image');
     request.files.add(await http.MultipartFile.fromPath(
       'image', 
       filePath,
