@@ -20,6 +20,10 @@ class ClothingItem {
   // AI-detected fields
   final String? color;
   final String? style;
+  final String? pattern;
+  final String? season;
+  final int? thickness; // 1-5
+  final String? material;
   final String? gender;
   final double? confidence;
 
@@ -32,6 +36,10 @@ class ClothingItem {
     required this.formality,
     this.color,
     this.style,
+    this.pattern,
+    this.season,
+    this.thickness,
+    this.material,
     this.gender,
     this.confidence,
   });
@@ -45,6 +53,10 @@ class ClothingItem {
     int? formality,
     String? color,
     String? style,
+    String? pattern,
+    String? season,
+    int? thickness,
+    String? material,
     String? gender,
     double? confidence,
   }) {
@@ -57,6 +69,10 @@ class ClothingItem {
       formality: formality ?? this.formality,
       color: color ?? this.color,
       style: style ?? this.style,
+      pattern: pattern ?? this.pattern,
+      season: season ?? this.season,
+      thickness: thickness ?? this.thickness,
+      material: material ?? this.material,
       gender: gender ?? this.gender,
       confidence: confidence ?? this.confidence,
     );
@@ -99,18 +115,24 @@ class ClothingItem {
   /// }
   /// ```
   factory ClothingItem.fromBackendJson(Map<String, dynamic> json) {
-    print('ClothingItem.fromBackendJson raw data: $json');
-    
     final rawCategoryName = ((json['category'] as Map?)?['name'] ?? '') as String;
     final categoryName = rawCategoryName.toLowerCase();
 
     final category = _mapBackendCategory(categoryName);
-    final warmth = _defaultWarmthFor(category);
-    final formality = _defaultFormalityFor(categoryName);
+    
+    // Use AI values if available, otherwise use defaults
+    final backendWarmth = json['warmth'] as int?;
+    final backendFormality = json['formality'] as int?;
+    final warmth = backendWarmth ?? _defaultWarmthFor(category);
+    final formality = backendFormality ?? _defaultFormalityFor(categoryName);
 
     // Parse AI-detected fields
     final colorValue = json['color'] as String?;
     final styleValue = json['style'] as String?;
+    final patternValue = json['pattern'] as String?;
+    final seasonValue = json['season'] as String?;
+    final thicknessValue = json['thickness'] as int?;
+    final materialValue = json['material'] as String?;
     final genderValue = json['gender'] as String?;
     final confidenceValue = json['confidence'] != null 
         ? (json['confidence'] as num).toDouble() 
@@ -125,6 +147,10 @@ class ClothingItem {
       formality: formality,
       color: colorValue,
       style: styleValue,
+      pattern: patternValue,
+      season: seasonValue,
+      thickness: thicknessValue,
+      material: materialValue,
       gender: genderValue,
       confidence: confidenceValue,
     );

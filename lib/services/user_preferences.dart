@@ -6,6 +6,7 @@ class UserPreferences {
   static const _keyEmail = 'user_email';
   static const _keyAge = 'user_age';
   static const _keyGender = 'user_gender';
+  static const _keyCity = 'user_city';
 
   static Future<void> saveProfile({
     required String firstName,
@@ -36,5 +37,15 @@ class UserPreferences {
   static Future<String> getGender() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyGender) ?? 'Erkek';
+  }
+
+  static Future<void> saveCity(String city) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyCity, city);
+  }
+
+  static Future<String> getCity() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyCity) ?? 'İstanbul';
   }
 }

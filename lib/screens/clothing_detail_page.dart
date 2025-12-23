@@ -152,7 +152,9 @@ class _ClothingDetailPageState extends State<ClothingDetailPage> {
                   const SizedBox(height: 32),
                   
                   // AI-detected properties section
-                  if (widget.item.color != null || widget.item.style != null || widget.item.gender != null)
+                  if (widget.item.color != null || widget.item.style != null || 
+                      widget.item.pattern != null || widget.item.season != null ||
+                      widget.item.material != null)
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -192,8 +194,14 @@ class _ClothingDetailPageState extends State<ClothingDetailPage> {
                                 _buildInfoChip(Icons.palette, 'Renk', widget.item.color!, Colors.pink),
                               if (widget.item.style != null)
                                 _buildInfoChip(Icons.style, 'Stil', widget.item.style!, Colors.teal),
-                              if (widget.item.gender != null)
-                                _buildInfoChip(Icons.person, 'Cinsiyet', _getDisplayGender(), Colors.blue),
+                              if (widget.item.pattern != null)
+                                _buildInfoChip(Icons.pattern, 'Desen', widget.item.pattern!, Colors.deepPurple),
+                              if (widget.item.season != null)
+                                _buildInfoChip(Icons.wb_sunny, 'Mevsim', widget.item.season!, Colors.amber),
+                              if (widget.item.material != null)
+                                _buildInfoChip(Icons.layers, 'Malzeme', widget.item.material!, Colors.brown),
+                              if (widget.item.thickness != null)
+                                _buildInfoChip(Icons.straighten, 'Kalınlık', '${widget.item.thickness}/5', Colors.blueGrey),
                             ],
                           ),
                         ],

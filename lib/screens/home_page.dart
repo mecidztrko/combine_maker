@@ -68,17 +68,36 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
+  // Türkiye'nin 81 ili
+  static const List<String> _turkishCities = [
+    'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin',
+    'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa',
+    'Canakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Edirne', 'Elazığ', 'Erzincan',
+    'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkâri', 'Hatay', 'Isparta',
+    'Mersin', 'İstanbul', 'İzmir', 'Kars', 'Kastamonu', 'Kayseri', 'Kırıkkale', 'Kırklareli',
+    'Kırşehir', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin',
+    'Muğla', 'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun',
+    'Siirt', 'Sinop', 'Sivas', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Şanlıurfa',
+    'Uşak', 'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman', 'Kırıkkale',
+    'Batman', 'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük', 'Kilis',
+    'Osmaniye', 'Düzce',
+  ];
+
+  String _selectedCity = 'İstanbul';
+
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    _loadUserData();
   }
 
-  Future<void> _loadUserName() async {
+  Future<void> _loadUserData() async {
     final profile = await UserPreferences.loadProfile();
+    final savedCity = await UserPreferences.getCity();
     if (mounted) {
       setState(() {
         _userName = profile['firstName'] ?? '';
+        _selectedCity = savedCity;
       });
     }
   }
@@ -169,73 +188,42 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    // Search Bar
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Search Styles',
-                                prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                              ),
-                            ),
+                    // City Selector
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
+                        ],
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedCity,
+                        isExpanded: true,
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey.shade600),
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.location_on, color: Colors.grey.shade600),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          hintText: 'Şehir Seçin',
                         ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.tune, color: Colors.grey.shade600),
-                            onPressed: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade600),
-                            onPressed: () {},
-                          ),
-                        ),
-                      ],
+                        items: _turkishCities.map((city) {
+                          return DropdownMenuItem<String>(
+                            value: city,
+                            child: Text(city, style: const TextStyle(fontSize: 14)),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _selectedCity = value);
+                            UserPreferences.saveCity(value);
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),

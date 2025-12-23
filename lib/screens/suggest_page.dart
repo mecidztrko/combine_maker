@@ -4,6 +4,7 @@ import '../models/saved_outfit.dart';
 import '../services/weather_service.dart';
 import '../services/outfit_service.dart';
 import '../services/saved_outfits_service.dart';
+import '../services/user_preferences.dart';
 import '../config.dart';
 
 class SuggestPage extends StatefulWidget {
@@ -15,21 +16,71 @@ class SuggestPage extends StatefulWidget {
 
 class _SuggestPageState extends State<SuggestPage> {
   DateTime _date = DateTime.now();
-  final TextEditingController _purpose = TextEditingController(text: 'iş görüşmesi');
+  String _selectedOccasion = 'İş Görüşmesi';
   final _outfitService = OutfitService();
   final _weatherService = WeatherService();
   final _savedOutfitsService = SavedOutfitsService();
   
+  // Etkinlik seçenekleri
+  static const List<String> _occasions = [
+    'İş Görüşmesi',
+    'Günlük',
+    'Spor',
+    'Düğün',
+    'Romantik Akşam Yemeği',
+    'Parti',
+    'Mezuniyet',
+    'Tatil',
+    'Arkadaş Buluşması',
+    'Resmi Toplantı',
+  ];
+  
   WeatherInfo? _weather;
   OutfitRecommendationResponse? _recommendation;
   bool _loading = false;
-  Set<int> _savingIndices = {};
+  final Set<int> _savingIndices = {};
+  String _selectedCity = 'İstanbul';
 
   @override
-  void dispose() {
-    _purpose.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadCity();
   }
+
+  Future<void> _loadCity() async {
+    final city = await UserPreferences.getCity();
+    if (mounted) {
+      setState(() => _selectedCity = city);
+    }
+  }
+
+  IconData _getOccasionIcon(String occasion) {
+    switch (occasion) {
+      case 'İş Görüşmesi':
+        return Icons.work_outline;
+      case 'Günlük':
+        return Icons.wb_sunny_outlined;
+      case 'Spor':
+        return Icons.fitness_center;
+      case 'Düğün':
+        return Icons.celebration;
+      case 'Romantik Akşam Yemeği':
+        return Icons.restaurant;
+      case 'Parti':
+        return Icons.music_note;
+      case 'Mezuniyet':
+        return Icons.school;
+      case 'Tatil':
+        return Icons.beach_access;
+      case 'Arkadaş Buluşması':
+        return Icons.group;
+      case 'Resmi Toplantı':
+        return Icons.business_center;
+      default:
+        return Icons.event;
+    }
+  }
+
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -48,14 +99,14 @@ class _SuggestPageState extends State<SuggestPage> {
     });
     
     try {
-      // Hava durumunu al
-      final weather = await _weatherService.getWeatherFor(_date);
+      // Hava durumunu seçilen şehir için al
+      final weather = await _weatherService.getWeatherFor(_date, city: _selectedCity);
       
       // Backend'den kombin önerisi al (Gemini AI)
       final response = await _outfitService.getRecommendations(
         date: _date,
-        occasion: _purpose.text.trim().isEmpty ? 'genel' : _purpose.text.trim(),
-        city: 'Istanbul',
+        occasion: _selectedOccasion,
+        city: _selectedCity,
       );
 
       setState(() {
@@ -84,7 +135,7 @@ class _SuggestPageState extends State<SuggestPage> {
       final dateStr = "${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}";
       
       await _savedOutfitsService.save(SaveOutfitRequest(
-        occasion: _purpose.text.trim().isEmpty ? 'genel' : _purpose.text.trim(),
+        occasion: _selectedOccasion,
         date: dateStr,
         city: 'Istanbul',
         weather: _weather?.toJson() ?? {},
@@ -156,12 +207,48 @@ class _SuggestPageState extends State<SuggestPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: _purpose,
-                            decoration: InputDecoration(
-                              labelText: 'Etkinlik',
-                              hintText: 'örn: iş görüşmesi, düğün',
-                              prefixIcon: Icon(Icons.event_note, color: Colors.grey.shade600),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedOccasion,
+                              isExpanded: true,
+                              icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey.shade600),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                              dropdownColor: Colors.white,
+                              items: _occasions.map((occasion) {
+                                return DropdownMenuItem<String>(
+                                  value: occasion,
+                                  child: Row(
+                                    children: [
+                                      Icon(_getOccasionIcon(occasion), size: 20, color: Colors.grey.shade700),
+                                      const SizedBox(width: 12),
+                                      Flexible(
+                                        child: Text(
+                                          occasion, 
+                                          style: const TextStyle(fontSize: 14),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() => _selectedOccasion = value);
+                                }
+                              },
                             ),
                           ),
                         ),
