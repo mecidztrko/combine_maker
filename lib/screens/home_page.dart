@@ -7,6 +7,23 @@ import 'favorites_page.dart';
 import 'profile_page.dart';
 import '../services/ai_service.dart';
 import '../services/user_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class ArticleCard {
+  final String title;
+  final String description;
+  final String imageUrl;
+  final String url;
+  final String tag;
+
+  const ArticleCard({
+    required this.title,
+    required this.description,
+    required this.imageUrl,
+    required this.url,
+    required this.tag,
+  });
+}
 
 class HomePage extends StatefulWidget {
   final AppState appState;
@@ -27,6 +44,29 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   late final AiAdapter _ai = MockAiAdapter();
   String _userName = '';
+  final List<ArticleCard> _articles = const [
+    ArticleCard(
+      title: 'Minimal İş Kombinleri',
+      description: 'Ofiste rahat, şık ve sade görünüm için 5 öneri.',
+      imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518',
+      url: 'https://www.vogue.com/article/how-to-build-work-wardrobe',
+      tag: 'Office',
+    ),
+    ArticleCard(
+      title: 'Hafta Sonu Street Style',
+      description: 'Sneaker ve oversize hoodie ile sokak stili ipuçları.',
+      imageUrl: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c',
+      url: 'https://www.gq.com/story/mens-street-style-looks',
+      tag: 'Casual',
+    ),
+    ArticleCard(
+      title: 'Akşam Daveti Şıklığı',
+      description: 'Davetler için zamansız kombin önerileri.',
+      imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae',
+      url: 'https://www.harpersbazaar.com/fashion/trends/g27447140/evening-outfits/',
+      tag: 'Evening',
+    ),
+  ];
 
   @override
   void initState() {
@@ -201,16 +241,10 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            // Latest Styles Section
-            _buildSection('Latest Styles', _getLatestOutfits()),
-            // Formal Styles Section
-            _buildSection('Formal Styles', _getFormalOutfits()),
-            // Classic Styles Section
-            _buildSection('Classic Styles', _getClassicOutfits()),
-            // Upload Button
+            // Quick CTA: Kombin Önerisi Al
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: ElevatedButton(
                   onPressed: () {
                     // Navigate to Create tab (index 2)
@@ -222,6 +256,119 @@ class _HomePageState extends State<HomePage> {
                   child: const Text('Kombin Önerisi Al'),
                 ),
               ),
+            ),
+            // Latest Styles Section
+            _buildArticlesSection(),
+            _buildSection('Latest Styles', _getLatestOutfits()),
+            // Formal Styles Section
+            _buildSection('Formal Styles', _getFormalOutfits()),
+            // Classic Styles Section
+            _buildSection('Classic Styles', _getClassicOutfits()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArticlesSection() {
+    if (_articles.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('İlham / Blog', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _articles.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final article = _articles[index];
+                return GestureDetector(
+                  onTap: () async {
+                    final uri = Uri.parse(article.url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 160,
+                          width: double.infinity,
+                          child: Image.network(
+                            article.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey.shade200,
+                              child: Icon(Icons.image, color: Colors.grey.shade500),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEEF2FF),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      article.tag,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  const Icon(Icons.open_in_new, size: 16, color: Colors.black54),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                article.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                article.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.black54, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
