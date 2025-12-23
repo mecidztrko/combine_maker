@@ -1,4 +1,4 @@
-/// Weather data model - outfit.dart içindeki WeatherData'yı export eder
-/// Bu dosya outfit.dart'ın water kısmını ayrı export etmek için kullanılır
+// Weather data model
+// Bu dosya outfit.dart içindeki WeatherData sınıfını export eder
 
 export 'outfit.dart' show WeatherData;

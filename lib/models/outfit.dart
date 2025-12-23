@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'clothing.dart';
-import 'weather.dart';
 
 /// Backend OutfitItemDto formatına uygun
 class OutfitItemDto {
