@@ -19,12 +19,21 @@ class OutfitItemDto {
   });
 
   factory OutfitItemDto.fromJson(Map<String, dynamic> json) {
+    // Category can be a string or an object { name: "..." }
+    String categoryStr = '';
+    final rawCategory = json['category'];
+    if (rawCategory is String) {
+      categoryStr = rawCategory;
+    } else if (rawCategory is Map<String, dynamic>) {
+      categoryStr = rawCategory['name'] as String? ?? '';
+    }
+    
     return OutfitItemDto(
       id: json['id'] as String,
       name: json['name'] as String,
       imageUrl: json['imageUrl'] as String,
       color: json['color'] as String? ?? '',
-      category: json['category'] as String? ?? '',
+      category: categoryStr,
     );
   }
 

@@ -3,7 +3,7 @@ import '../models/outfit.dart';
 import '../models/image_library.dart';
 import 'wardrobe_page.dart';
 import 'suggest_page.dart';
-import 'create_outfit_page.dart';
+import 'favorites_page.dart';
 import 'profile_page.dart';
 import '../services/ai_service.dart';
 import '../services/user_preferences.dart';
@@ -213,20 +213,13 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CreateOutfitPage(
-                          appState: widget.appState,
-                          libraryState: widget.imageLibraryState,
-                        ),
-                      ),
-                    );
+                    // Navigate to Create tab (index 2)
+                    setState(() => _currentIndex = 2);
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 56),
                   ),
-                  child: const Text('Upload your Photo and Try Outfit'),
+                  child: const Text('Kombin Önerisi Al'),
                 ),
               ),
             ),
@@ -342,8 +335,8 @@ class _HomePageState extends State<HomePage> {
     final pages = [
       _buildHomeScreen(),
       WardrobePage(imageLibraryState: widget.imageLibraryState, ai: _ai),
-      CreateOutfitPage(appState: widget.appState, libraryState: widget.imageLibraryState),
-      SuggestPage(appState: widget.appState, imageLibraryState: widget.imageLibraryState, ai: _ai),
+      const SuggestPage(),  // Create tab - Gemini kombin önerisi
+      const FavoritesPage(), // Favorites tab - Kaydedilmiş kombinler
       ProfilePage(onLogout: widget.onLogout),
     ];
 
